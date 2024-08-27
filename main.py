@@ -16,14 +16,14 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 # Company-specific details
-COMPANY_NAME = "FLIP"
-COMPANY_DOMAIN = "flip.id/"
+COMPANY_NAME = "IIT Jammu"
+COMPANY_DOMAIN = "iitjammu.ac.in/"
 COMPANY_ROLE = f'{COMPANY_NAME} Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on lxme.in.'
+COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on iitjammu.ac.in.'
 COMPANY_BACKSTORY = (
     f'You are a knowledgeable specialist in {COMPANY_NAME}\'s offerings. '
-    f'You provide detailed information about their products, services, '
-    f'and solutions available on lxme.in, including any innovations and key features.'
+    f'You provide detailed information about their courses, departements, events, timetables etc. '
+    f'and solutions available on iitjammu.ac.in, including any innovations and key features.'
 )
 
 
@@ -77,7 +77,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s trading platforms, financial instruments, account types, and market analysis tools. '
+            f'about {COMPANY_NAME}\'s institution, events, courses, departements, happenings, timetable, students. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
