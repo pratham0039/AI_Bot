@@ -26,7 +26,7 @@ COMPANY_ROLE = f'{COMPANY_NAME} Information Specialist'
 COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on axi.com.'
 COMPANY_BACKSTORY = (
     f'You are a knowledgeable specialist in {COMPANY_NAME}\'s offerings. '
-    f'You provide detailed information about their products, services, '
+    f'You provide detailed institue, courses, fee structure, timetables, departements, professors, students etc. '
     f'and solutions available on axi.com, including any innovations and key features.'
 )
 
@@ -98,7 +98,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s trading platforms, learning platform. '
+            f'about {COMPANY_NAME}\'s courses, infrastructure, professors, departement, timetable, events, research projects. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
