@@ -7,8 +7,7 @@ from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool
 from dotenv import load_dotenv
 from pytube import YouTube, Channel
-from youtube_transcript_api import YouTubeTranscriptApi
-from youtube_transcript_api.formatters import JSONFormatter
+
 
 from mail import send_logs_email
 
@@ -32,25 +31,6 @@ COMPANY_BACKSTORY = (
 )
 
 
-# Load transcription data from the text file
-def load_transcriptions(filepath):
-    transcriptions = []
-    with open(filepath, 'r') as file:
-        transcription_data = file.read().split('\n\n\n')  # Assume each entry is separated by double newlines
-        for entry in transcription_data:
-            lines = entry.strip().split('\n')
-            if len(lines) >= 3:
-                video_title = lines[0].split(':')[0]
-                video_link = lines[0].split(':')[1]
-                transcript = '\n'.join(lines[2:])
-                transcriptions.append({
-                    'title': video_title,
-                    'link': video_link,
-                    'transcript': transcript
-                })
-    return transcriptions
-
-transcriptions = load_transcriptions('data.txt')
 
 
 # Initialize the SerperDevTool with company-specific search settings
@@ -231,34 +211,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-from openai import OpenAI
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-def process_chunk(chunk, query):
-    # Send a query to the GPT model using a chunk of data
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are telling user about a youtube video."},
-            {"role": "user", "content": f"Using the following transcript of a youtube video, answer the query directly:\n\n{chunk}\n\nQuery: {query}"}
-        ],
-        max_tokens=1500,  # Adjust token limit based on your needs
-        temperature=0.7
-    )
-    # Extract the response from GPT
-    return response.choices[0].message.content
-
-def process_large_document(document, query):
-    chunk_size = 1000  # Define the chunk size (e.g., 1000 characters)
-    chunks = [document[i:i + chunk_size] for i in range(0, len(document), chunk_size)]
-
-    
-    for chunk in chunks:
-        response = process_chunk(chunk, query)
-        aggregated_response = response
-
-    return aggregated_response
-#Function to check links
 
 def check_links(links, user_query):
     web_links = []
