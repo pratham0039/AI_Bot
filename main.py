@@ -216,16 +216,11 @@ def check_links(links, user_query):
     youtube_links = []
     youtube_response = ""
     for link in links:
-       if COMPANY_DOMAIN in link:
+       if COMPANY_DOMAIN in link or "linkedin.com" in link:
            web_links.append(link)
        if "youtube.com" in link and "watch" in link:
-           x = YouTube(link)
-           curl = x.channel_url
-           c = Channel(curl)
-           name = c.channel_name
-         
-           if name == COMMPANY_YOUTUBE:
-               youtube_links.append(link)
+          
+          youtube_links.append(link)
    
        
                
