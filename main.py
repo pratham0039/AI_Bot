@@ -1,12 +1,12 @@
 import json
 import os
-import openai
+
 from pathlib import Path
 import streamlit as st
 from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool
 from dotenv import load_dotenv
-from pytube import YouTube, Channel
+
 
 
 from mail import send_logs_email
@@ -19,15 +19,14 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 # Company-specific details
-COMPANY_NAME = "IIT Jammu"
-COMPANY_DOMAIN = "iitjammu.ac.in/"
-COMMPANY_YOUTUBE = "Airing IIT Jammu"
+COMPANY_NAME = "MCA"
+COMPANY_DOMAIN = "mca.gov.in/"
 COMPANY_ROLE = f'{COMPANY_NAME} Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on axi.com.'
+COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on mca.gov.in.'
 COMPANY_BACKSTORY = (
     f'You are a knowledgeable specialist in {COMPANY_NAME}\'s offerings. '
-    f'You provide detailed institue, courses, fee structure, timetables, departements, professors, students etc. '
-    f'and solutions available on axi.com, including any innovations and key features.'
+    f'You provide detailed information about their products, services, '
+    f'and solutions available on mca.gov.in, including any innovations and key features.'
 )
 
 
@@ -44,16 +43,7 @@ class CompanySerperDevTool(SerperDevTool):
         print(results)
         relevant_results = [result for result in results if COMPANY_DOMAIN in result.get('link', '')]
         
-        # Search through transcriptions
-        transcription_results = []
-        for transcription in transcriptions:
-            if query.lower() in transcription['transcript'].lower():
-                transcription_results.append({
-                    'title': transcription['title'],
-                    'link': transcription['link'],
-                    'transcript': transcription['transcript']
-                })
-        
+
         return results
 
 search_tool = CompanySerperDevTool()
@@ -98,7 +88,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s courses, infrastructure, professors, departement, timetable, events, research projects. '
+            f'about {COMPANY_NAME}\'s Rules, regulations, updates'
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
@@ -194,8 +184,9 @@ st.markdown(custom_css, unsafe_allow_html=True)
 # Streamlit UI
 st.markdown("""
           
-      <h4 style="color:#ffc107;">
-          IIT Jammu Chat Bot
+          
+    <h4 style="color:#ffc107;">
+           MCA Bot
     </h4>
   
 """, unsafe_allow_html=True)
