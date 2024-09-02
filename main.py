@@ -19,28 +19,27 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 # Company-specific details
-COMPANY_NAME = "MCA"
-COMPANY_DOMAIN = "mca.gov.in/"
-COMPANY_ROLE = f'{COMPANY_NAME} Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, services, and solutions available on mca.gov.in.'
+COMPANY_NAME = "MYNTRA"
+COMPANY_DOMAIN = "myntra.com/"
+COMPANY_ROLE = f'{COMPANY_NAME} Products Information Specialist'
+COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} Products.'
 COMPANY_BACKSTORY = (
-    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s offerings. '
-    f'You provide detailed information about their products, services, '
-    f'and solutions available on mca.gov.in, including any innovations and key features.'
+    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s products, sales, etc.. '
+   
+    f'It is an Product company not a trading platform'
+    
+   
 )
-
-
 
 
 # Initialize the SerperDevTool with company-specific search settings
 class CompanySerperDevTool(SerperDevTool):
     def search(self, query):
         # Search the company website
-        print('pratjam weas jeejjs')
+        
         company_query = f"site:{COMPANY_DOMAIN} {query}"
         results = super().search(company_query)
-        print('wsefwd')
-        print(results)
+    
         relevant_results = [result for result in results if COMPANY_DOMAIN in result.get('link', '')]
         
 
@@ -88,7 +87,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s Rules, regulations, updates'
+            f'about {COMPANY_NAME}\'s products, sales, recommendations, companies etc. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
@@ -115,32 +114,32 @@ body {
 
 /* Change the color of the main title */
 h1 {
-    color: #dc3545;
+    color: #9b51e0;
 }
 
 /* Style the chat messages */
 .chat-message.user {
     background-color: #ffcccb;
-    color: #dc3545;
-    border: 2px solid #dc3545;
+    color: #9b51e0;
+    border: 2px solid #9b51e0;
 }
 
 .chat-message.assistant {
     background-color: #ffffcc;
-    color: #dc3545;
-    border: 2px solid #dc3545;
+    color: #9b51e0;
+    border: 2px solid #9b51e0;
 }
 
 /* Style the input box at the bottom */
 .stTextInput > div {
     background-color: #ffcccb;
     border-radius: 5px;
-    color: #dc3545;
+    color: #9b51e0;
 }
 
 /* Style the buttons */
 button {
-    background-color: #dc3545;
+    background-color: #9b51e0;
     color: #fff;
    
     border: none;
@@ -148,26 +147,26 @@ button {
 }
 
 .st-emotion-cache-1ghhuty{
-background-color: #dc3545;
+background-color: #9b51e0;
 }
 
 .st-emotion-cache-bho8sy{
-background-color: #ffc107;
+background-color: #ff6900;
 }
 /* Style the spinner */
 .stSpinner > div {
-    border-top-color: #dc3545;
+    border-top-color: #9b51e0;
 }
 
 /* Style the download button */
 .stDownloadButton {
-    background-color: #dc3545;
+    background-color: #9b51e0;
     color: #fff;
     border-radius: 5px;
 }
 
 .st-emotion-cache-1dp5vir{
-background-image: linear-gradient(90deg, rgb(255, 75, 75), rgb(255, 253, 128));
+background-image: linear-gradient(90deg, rgb(155, 81, 224), rgb(155, 81, 224));
 }
 
 .black-text {
@@ -183,11 +182,10 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 # Streamlit UI
 st.markdown("""
-          
-          
-    <h4 style="color:#ffc107;">
-           MCA Bot
-    </h4>
+      
+    <h1 style="color:#9b51e0;">
+           Myntra Sales Bot
+    </h1>
   
 """, unsafe_allow_html=True)
 st.write("<style>div.block-container{padding-top:2rem;}</style>", unsafe_allow_html=True)
@@ -207,7 +205,7 @@ def check_links(links, user_query):
     youtube_links = []
     youtube_response = ""
     for link in links:
-       if COMPANY_DOMAIN in link or "linkedin.com" in link:
+       if COMPANY_DOMAIN in link:
            web_links.append(link)
        if "youtube.com" in link and "watch" in link:
           
