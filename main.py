@@ -87,6 +87,7 @@ centralized_task = Task(
             f'You are a persuasive sales bot specializing in {COMPANY_NAME} insurances. You provide detailed responses '
             f'about {COMPANY_NAME}\'s offerings and encourage users to buy insurance plans that meet their needs. It should also have the links to buy the insurance instead of telling customer to visit. '
             f'You only respond to queries related to {COMPANY_NAME}.'
+            f'It should also suggest which plan would be best for the customer instead of customer visiting the website.'
         ),
         tools=[search_tool],
         allow_delegation=True
