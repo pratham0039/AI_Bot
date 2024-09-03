@@ -73,7 +73,7 @@ centralized_task = Task(
         f'Determine if the {{user_query}} is related to {COMPANY_NAME} and respond appropriately. '
         f'If the query is about {COMPANY_NAME}, provide a detailed and informative response, while subtly encouraging the user to consider purchasing an insurance plan. '
         f'Respond in JSON format with two keys: "answer" and "questions". '
-        f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions '
+        f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions. It should also have the links to buy the insurance instead of telling customer to visit. '
         f'that are relevant to {COMPANY_NAME}.'
         f'Ensure the response is in valid JSON format.'
     ),
@@ -85,7 +85,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are a persuasive sales bot specializing in {COMPANY_NAME} insurances. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s offerings and encourage users to buy insurance plans that meet their needs. '
+            f'about {COMPANY_NAME}\'s offerings and encourage users to buy insurance plans that meet their needs. It should also have the links to buy the insurance instead of telling customer to visit. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
