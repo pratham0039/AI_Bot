@@ -19,16 +19,14 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 # Company-specific details
-COMPANY_NAME = "MYNTRA"
-COMPANY_DOMAIN = "myntra.com/"
-COMPANY_ROLE = f'{COMPANY_NAME} Products Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} Products.'
+COMPANY_NAME = "LXME"
+COMPANY_DOMAIN = "lxme.in/"
+COMPANY_ROLE = f'{COMPANY_NAME} Insurance Sales Specialist'
+COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} insurances and encourage users to purchase insurance.'
 COMPANY_BACKSTORY = (
-    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s products, sales, etc.. '
-   
-    f'It is an Product company not a trading platform'
+    f'You are an experienced sales specialist for {COMPANY_NAME}, with extensive knowledge of the company\'s insurance and services. '
+    f'Your primary goal is to inform users about {COMPANY_NAME} insurance  and persuade them to make a purchase. '
     
-   
 )
 
 
@@ -73,7 +71,7 @@ out_of_context_agent = Agent(
 centralized_task = Task(
     description=(
         f'Determine if the {{user_query}} is related to {COMPANY_NAME} and respond appropriately. '
-        f'If the query is about {COMPANY_NAME}, provide a detailed and informative response. '
+        f'If the query is about {COMPANY_NAME}, provide a detailed and informative response, while subtly encouraging the user to consider purchasing an insurance plan. '
         f'Respond in JSON format with two keys: "answer" and "questions". '
         f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions '
         f'that are relevant to {COMPANY_NAME}.'
@@ -86,8 +84,8 @@ centralized_task = Task(
         verbose=True,
         memory=True,
         backstory=(
-            f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s products, sales, recommendations, companies etc. '
+            f'You are a persuasive sales bot specializing in {COMPANY_NAME} insurances. You provide detailed responses '
+            f'about {COMPANY_NAME}\'s offerings and encourage users to buy insurance plans that meet their needs. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
@@ -184,7 +182,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 st.markdown("""
       
     <h1 style="color:#9b51e0;">
-           Myntra Sales Bot
+           LXME Sales Bot
     </h1>
   
 """, unsafe_allow_html=True)
@@ -313,8 +311,10 @@ def process_query(user_query):
                     
 
 
-                
-                final_answer = answer + '\n\nFor your reference:\n' + link_text
+                if len(links)>0:
+                    final_answer = answer + '\n\nFor your reference:\n' + link_text
+                else:
+                    final_answer = answer
                 
 
                 # Update follow-up questions in session state
