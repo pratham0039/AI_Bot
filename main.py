@@ -113,6 +113,9 @@ body {
 }
 
 /* Change the color of the main title */
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
 h1 {
     color: #bf1f61;
 }
