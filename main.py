@@ -194,7 +194,7 @@ background-color: black;
 
 @media (max-width: 50.5rem) {
     .st-emotion-cache-1eo1tir {
-        max-width: calc(99vw);
+        max-width: calc(90vw);
     }
 }
 </style>
