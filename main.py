@@ -75,7 +75,7 @@ centralized_task = Task(
         f'Determine if the {{user_query}} is related to {COMPANY_NAME} and respond appropriately. '
         f'If the query is about {COMPANY_NAME}, provide a detailed and informative response. '
         f'Respond in JSON format with two keys: "answer" and "questions". '
-        f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions '
+        f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions. Make sure to answer in proper format, if the answer have list it should be formatted as a list not a pararaph '
         f'that are relevant to {COMPANY_NAME}.'
         f'Ensure the response is in valid JSON format.'
     ),
