@@ -202,9 +202,9 @@ st.markdown(custom_css, unsafe_allow_html=True)
 
 # Streamlit UI
 st.markdown("""
-    <h1 style="color:#bf1f61; margin-left:5px;">
+    <h3 style="color:#bf1f61; margin-left:5px;">
         L<span style="color:#bf1f61;">X</span>ME Customer Support
-    </h1>
+    </h3>
 """, unsafe_allow_html=True)
 st.markdown("""
  <div class="bottom-icons">
