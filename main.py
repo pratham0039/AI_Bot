@@ -180,7 +180,7 @@ background-color: black;
     
     text-align: center;
     
-    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1); /* Optional shadow for better visibility */
+    
     display:flex;
 }
 .bottom-icons img {
@@ -208,7 +208,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.markdown("""
  <div class="bottom-icons">
-    <p style="margin: 0 10px; color:#bf1f61"> For Human Support </p>
+    <p style="margin: 0 10px; color:#bf1f61"> For Human Support: </p>
     <a href="#"><img src="https://img.icons8.com/?size=100&id=9729&format=png&color=bf1f61"  alt="Home"/></a>
     <a href="#"><img src="https://img.icons8.com/?size=100&id=16733&format=png&color=bf1f61" alt="Search"/></a>
     <a href="#"><img src="https://img.icons8.com/?size=100&id=Y2GfpkgYNp42&format=png&color=bf1f61" alt="Info"/></a>
