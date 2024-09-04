@@ -1,14 +1,10 @@
 import json
 import os
-
-from pathlib import Path
 import streamlit as st
 from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool
 from dotenv import load_dotenv
-
-
-
+from pathlib import Path
 from mail import send_logs_email
 
 # Load environment variables from .env file
@@ -19,31 +15,27 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
 # Company-specific details
-COMPANY_NAME = "MYNTRA"
-COMPANY_DOMAIN = "myntra.com/"
-COMPANY_ROLE = f'{COMPANY_NAME} Products Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} Products.'
+COMPANY_NAME = "LXME"
+COMPANY_DOMAIN = "lxme.in/"
+COMPANY_ROLE = f'{COMPANY_NAME} Information Specialist'
+COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} products, insurance and solutions available on {COMPANY_DOMAIN}'
 COMPANY_BACKSTORY = (
-    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s products, sales, etc.. '
-   
-    f'It is an Product company not a trading platform'
-    
-   
+    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s offerings. '
+    f'You provide detailed information about their products, services, insurance '
+    f'and solutions available on lxme.in, including any innovations and key features.'
 )
+
+
+
 
 
 # Initialize the SerperDevTool with company-specific search settings
 class CompanySerperDevTool(SerperDevTool):
     def search(self, query):
-        # Search the company website
-        
         company_query = f"site:{COMPANY_DOMAIN} {query}"
         results = super().search(company_query)
-    
         relevant_results = [result for result in results if COMPANY_DOMAIN in result.get('link', '')]
-        
-
-        return results
+        return relevant_results
 
 search_tool = CompanySerperDevTool()
 
@@ -79,7 +71,7 @@ centralized_task = Task(
         f'that are relevant to {COMPANY_NAME}.'
         f'Ensure the response is in valid JSON format.'
     ),
-    expected_output='A JSON object containing "answer", and "questions" without any unescaped newline characters and without any codeblock. It should also have all the links of youtube and blogs it thought during the proccess of searching in json as "links". Make sure to not add links to "answer". The response should be able to pass JSON.loads() without any error. ',
+    expected_output='A JSON object containing "answer" and "questions" without any unescaped newline characters and without any codeblock. The response should be able to pass JSON.loads() without any error.',
     agent=Agent(
         role=f'{COMPANY_NAME} Information Bot',
         goal=f'Provide comprehensive information about {COMPANY_NAME} and its offerings.',
@@ -87,7 +79,7 @@ centralized_task = Task(
         memory=True,
         backstory=(
             f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s products, sales, recommendations, companies etc. '
+            f'about {COMPANY_NAME}\'s account types, insurance and funds. '
             f'You only respond to queries related to {COMPANY_NAME}.'
         ),
         tools=[search_tool],
@@ -102,92 +94,8 @@ centralized_crew = Crew(
     process=Process.sequential
 )
 
-
-
-# Define custom CSS
-custom_css = """
-<style>
-/* Change the background color of the entire app */
-body {
-    background-color: #ffe6f2;
-}
-
-/* Change the color of the main title */
-h1 {
-    color: #9b51e0;
-}
-
-/* Style the chat messages */
-.chat-message.user {
-    background-color: #ffcccb;
-    color: #9b51e0;
-    border: 2px solid #9b51e0;
-}
-
-.chat-message.assistant {
-    background-color: #ffffcc;
-    color: #9b51e0;
-    border: 2px solid #9b51e0;
-}
-
-/* Style the input box at the bottom */
-.stTextInput > div {
-    background-color: #ffcccb;
-    border-radius: 5px;
-    color: #9b51e0;
-}
-
-/* Style the buttons */
-button {
-    background-color: #9b51e0;
-    color: #fff;
-   
-    border: none;
-    border-radius: 5px;
-}
-
-.st-emotion-cache-1ghhuty{
-background-color: #9b51e0;
-}
-
-.st-emotion-cache-bho8sy{
-background-color: #ff6900;
-}
-/* Style the spinner */
-.stSpinner > div {
-    border-top-color: #9b51e0;
-}
-
-/* Style the download button */
-.stDownloadButton {
-    background-color: #9b51e0;
-    color: #fff;
-    border-radius: 5px;
-}
-
-.st-emotion-cache-1dp5vir{
-background-image: linear-gradient(90deg, rgb(155, 81, 224), rgb(155, 81, 224));
-}
-
-.black-text {
-    
-    color: black;
-    
-}
-</style>
-"""
-
-# Inject the custom CSS
-st.markdown(custom_css, unsafe_allow_html=True)
-
 # Streamlit UI
-st.markdown("""
-      
-    <h1 style="color:#9b51e0;">
-           Myntra Sales Bot
-    </h1>
-  
-""", unsafe_allow_html=True)
+st.title(f"{COMPANY_NAME} Information Assistant")
 st.write("<style>div.block-container{padding-top:2rem;}</style>", unsafe_allow_html=True)
 
 # Initialize chat history
@@ -198,27 +106,6 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
-
-def check_links(links, user_query):
-    web_links = []
-    youtube_links = []
-    youtube_response = ""
-    for link in links:
-       if COMPANY_DOMAIN in link:
-           web_links.append(link)
-       if "youtube.com" in link and "watch" in link:
-          
-          youtube_links.append(link)
-   
-       
-               
-
-               
-               
-    
-    return web_links, youtube_links
-           
 
 # Function to save the chat history to a file
 def save_chat_history(filename=f"{COMPANY_NAME}.txt"):
@@ -280,7 +167,7 @@ def process_query(user_query):
         st.markdown(user_query)
     st.session_state.messages.append({"role": "user", "content": user_query})
     
-    final_answer = ""  # Initialize the answer variable
+    answer = ""  # Initialize the answer variable
 
     with st.chat_message("assistant"):
         with st.spinner("Processing your input..."):
@@ -292,30 +179,8 @@ def process_query(user_query):
                 # Parse JSON response
                 parsed_result = json.loads(cleaned_result)
                 answer = parsed_result.get("answer", "")
-                links = parsed_result.get("links", "")
-                web, youtube = check_links(links, user_query)
                 questions = parsed_result.get("questions", [])
-                link_text = " "
-                
-                if len(youtube)>0:
-                    
-                    link_text += '\nHere some youtube references\n' + '\n'
-                    for link in youtube:
-                    
-                         link_text += '\n' + link + '\n' +','
-                    
-                
-                if len(web)>0:
-                    link_text += '\nHere some web references\n' + '\n'
-                    for link in web:
-                        
-                        link_text += '\n' + link + ','
-                    
-
-
-                
-                final_answer = answer + '\n\nFor your reference:\n' + link_text
-                
+                st.markdown(f"{answer}")
 
                 # Update follow-up questions in session state
                 st.session_state.follow_up_questions = questions
@@ -325,9 +190,7 @@ def process_query(user_query):
                 st.markdown(f"**Error parsing JSON:**\n{result}")
                 answer = "There was an error processing your request."
 
-    st.session_state.messages.append({"role": "assistant", "content": final_answer})
-    
-    
+    st.session_state.messages.append({"role": "assistant", "content": answer})
 
     # Save chat history to file
     save_chat_history()
