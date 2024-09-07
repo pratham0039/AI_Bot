@@ -99,14 +99,14 @@ if uploaded_file is not None:
     st.markdown("### List of Prompts:")
     for i, prompt in enumerate(prompts, 1):
         if len(prompt.split())>2:
-            st.markdown(f"{i}. {prompt}")
+            st.markdown(f"Prompt. {prompt}")
 
 if st.button("Submit"):
     if user_input and sprinklr_input and riddhi_input:
         with st.spinner("Processing..."):
             for i, prompt in enumerate(prompts, 1):
                 if len(prompt.split())>2:
-                    st.write(i)
+                    
                 # Step 1: Generate prompt based on user input
                     st.write("prompt")
                     st.write(prompt)
