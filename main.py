@@ -167,3 +167,4 @@ if st.button("Submit"):
             )
     else:
         st.error("Please provide both User and Sprinklr inputs.")
+
