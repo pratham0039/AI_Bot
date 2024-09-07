@@ -104,41 +104,41 @@ if st.button("Submit"):
     if user_input and sprinklr_input and riddhi_input:
         with st.spinner("Processing..."):
             for i, prompt in enumerate(prompts, 1):
-                
-                st.write(i)
-            # Step 1: Generate prompt based on user input
-                st.write("prompt")
-                st.write(prompt)
-                prompt_length = len(prompt.split())  # Count the number of words in the prompt
-                st.write(f"Prompt Length: {prompt_length} words")
-                start_time = time.time()
+                if len(prompt.split())>2:
+                    st.write(i)
+                # Step 1: Generate prompt based on user input
+                    st.write("prompt")
+                    st.write(prompt)
+                    prompt_length = len(prompt.split())  # Count the number of words in the prompt
+                    st.write(f"Prompt Length: {prompt_length} words")
+                    start_time = time.time()
 
-                user_emotions = understand_user(user_input)
-                
+                    user_emotions = understand_user(user_input)
+                    
 
-                # Step 2: Rephrase Sprinklr input using the generated prompt
-                rephrased_output = rephrase_sprinklr(sprinklr_input, user_emotions,prompt)
-                st.write("Rephrased Sprinklr Output:")
-                st.write(rephrased_output)
-                end_time = time.time()
-                elapsed_time = end_time - start_time
+                    # Step 2: Rephrase Sprinklr input using the generated prompt
+                    rephrased_output = rephrase_sprinklr(sprinklr_input, user_emotions,prompt)
+                    st.write("Rephrased Sprinklr Output:")
+                    st.write(rephrased_output)
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
 
-                embedding1 = get_embedding(rephrased_output)
-                embedding2 = get_embedding(riddhi_input)
+                    embedding1 = get_embedding(rephrased_output)
+                    embedding2 = get_embedding(riddhi_input)
 
-                # Calculate cosine similarity
-                similarity_score = calculate_similarity(embedding1, embedding2)
+                    # Calculate cosine similarity
+                    similarity_score = calculate_similarity(embedding1, embedding2)
 
-                st.write("Similarity score")
-                st.write(similarity_score)
-                st.write(f"Time Taken: {elapsed_time:.2f} seconds")
-                inputs.append(user_input)
-                sprinklr_inputs.append(sprinklr_input)
-                prompts_given.append(prompt)
-                prompt_lengths.append(prompt_length)
-                rephrased_outputs.append(rephrased_output)
-                times_taken.append(elapsed_time)
-                similarity_scores.append(similarity_score)
+                    st.write("Similarity score")
+                    st.write(similarity_score)
+                    st.write(f"Time Taken: {elapsed_time:.2f} seconds")
+                    inputs.append(user_input)
+                    sprinklr_inputs.append(sprinklr_input)
+                    prompts_given.append(prompt)
+                    prompt_lengths.append(prompt_length)
+                    rephrased_outputs.append(rephrased_output)
+                    times_taken.append(elapsed_time)
+                    similarity_scores.append(similarity_score)
 
             data = {
                 "Input": inputs,
