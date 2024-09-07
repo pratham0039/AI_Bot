@@ -1,346 +1,168 @@
-import json
-import os
-
-from pathlib import Path
 import streamlit as st
-from crewai import Agent, Task, Crew, Process
-from crewai_tools import SerperDevTool
+import openai
+import os
 from dotenv import load_dotenv
+from openai import OpenAI
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import time
+import pandas as pd
+from io import BytesIO
 
+def get_embedding(text):
+    response = openai.embeddings.create(
+        input=text,
+        model="text-embedding-ada-002"
+    )
+    embedding = response.data[0].embedding
+    print(embedding)
+    return np.array(embedding)
 
-
-from mail import send_logs_email
+def calculate_similarity(embedding1, embedding2):
+    return cosine_similarity([embedding1], [embedding2])[0][0]
 
 # Load environment variables from .env file
 load_dotenv()
-
 # Set up the environment keys
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY")
 
-# Company-specific details
-COMPANY_NAME = "MYNTRA"
-COMPANY_DOMAIN = "myntra.com/"
-COMPANY_ROLE = f'{COMPANY_NAME} Products Information Specialist'
-COMPANY_GOAL = f'Provide accurate and detailed information about {COMPANY_NAME} Products.'
-COMPANY_BACKSTORY = (
-    f'You are a knowledgeable specialist in {COMPANY_NAME}\'s products, sales, etc.. '
-   
-    f'It is an Product company not a trading platform'
-    
-   
+client = OpenAI(
+    # This is the default and can be omitted
+    api_key=os.environ.get("OPENAI_API_KEY"),
 )
 
 
-# Initialize the SerperDevTool with company-specific search settings
-class CompanySerperDevTool(SerperDevTool):
-    def search(self, query):
-        # Search the company website
-        
-        company_query = f"site:{COMPANY_DOMAIN} {query}"
-        results = super().search(company_query)
-    
-        relevant_results = [result for result in results if COMPANY_DOMAIN in result.get('link', '')]
-        
+def load_prompts_from_file(uploaded_file):
+    # Load prompts from the uploaded text file
+    prompts = uploaded_file.read().decode("utf-8").splitlines()
+    return prompts
 
-        return results
-
-search_tool = CompanySerperDevTool()
-
-# Agent setups
-company_info_agent = Agent(
-    role=COMPANY_ROLE,
-    goal=COMPANY_GOAL,
-    verbose=True,
-    memory=True,
-    backstory=COMPANY_BACKSTORY,
-    tools=[search_tool]
-)
-
-out_of_context_agent = Agent(
-    role='Context Checker',
-    goal=f'Determine if a question is relevant to {COMPANY_NAME} and politely decline if not.',
-    verbose=True,
-    memory=True,
-    backstory=(
-        f'You are responsible for determining if a question is relevant to {COMPANY_NAME}. '
-        f'If the question is not related, you respond politely indicating that the question is out of context and '
-        f'that only {COMPANY_NAME}-related information is provided.'
+def understand_user(user_input):
+    # Call OpenAI API to understand user's emotion and generate a prompt
+    response =client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are an assistant that understands emotions. "},
+            {"role": "user", "content": f"The user says: {user_input}. What is their emotion"}
+        ]
     )
-)
+    prompt = response.choices[0].message.content
+    
+    return prompt
 
-# Centralized Task
-centralized_task = Task(
-    description=(
-        f'Determine if the {{user_query}} is related to {COMPANY_NAME} and respond appropriately. '
-        f'If the query is about {COMPANY_NAME}, provide a detailed and informative response. '
-        f'Respond in JSON format with two keys: "answer" and "questions". '
-        f'The "answer" key should contain the response, and the "questions" key should be an array of three follow-up questions '
-        f'that are relevant to {COMPANY_NAME}.'
-        f'Ensure the response is in valid JSON format.'
-    ),
-    expected_output='A JSON object containing "answer", and "questions" without any unescaped newline characters and without any codeblock. It should also have all the links of youtube and blogs it thought during the proccess of searching in json as "links". Make sure to not add links to "answer". The response should be able to pass JSON.loads() without any error. ',
-    agent=Agent(
-        role=f'{COMPANY_NAME} Information Bot',
-        goal=f'Provide comprehensive information about {COMPANY_NAME} and its offerings.',
-        verbose=True,
-        memory=True,
-        backstory=(
-            f'You are an intelligent bot specializing in {COMPANY_NAME} information. You provide detailed responses '
-            f'about {COMPANY_NAME}\'s products, sales, recommendations, companies etc. '
-            f'You only respond to queries related to {COMPANY_NAME}.'
-        ),
-        tools=[search_tool],
-        allow_delegation=True
+
+def rephrase_sprinklr(sprinklr_input, generated_prompt,prompt):
+    # Call OpenAI API to rephrase the Sprinklr input using the generated prompt
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are an assistant that rephrases text."},
+            {"role": "user", "content": f'''
+
+             Chatbot Response: {sprinklr_input} 
+             User's emotions: {generated_prompt} 
+{prompt}           
+
+
+'''}
+        ]
     )
-)
+    rephrased_output = response.choices[0].message.content
+    return rephrased_output
 
-# Centralized Crew setup
-centralized_crew = Crew(
-    agents=[company_info_agent, out_of_context_agent],
-    tasks=[centralized_task],
-    process=Process.sequential
-)
+# Streamlit app
+st.title("Emotion-based Sprinklr Rephraser")
 
 
 
-# Define custom CSS
-custom_css = """
-<style>
-/* Change the background color of the entire app */
-body {
-    background-color: #ffe6f2;
-}
+# User input
+user_input = st.text_input("Enter User Input:")
+sprinklr_input = st.text_area("Enter Sprinklr Input:")
+riddhi_input = st.text_area("Enter Riddhi Input:")
 
-/* Change the color of the main title */
-h1 {
-    color: #9b51e0;
-}
+uploaded_file = st.file_uploader("Upload a text file with prompts", type=["txt"])
 
-/* Style the chat messages */
-.chat-message.user {
-    background-color: #ffcccb;
-    color: #9b51e0;
-    border: 2px solid #9b51e0;
-}
+inputs = []
+sprinklr_inputs = []
+prompts_given = []
+prompt_lengths = []
+rephrased_outputs = []
+times_taken = []
+similarity_scores = []
 
-.chat-message.assistant {
-    background-color: #ffffcc;
-    color: #9b51e0;
-    border: 2px solid #9b51e0;
-}
-
-/* Style the input box at the bottom */
-.stTextInput > div {
-    background-color: #ffcccb;
-    border-radius: 5px;
-    color: #9b51e0;
-}
-
-/* Style the buttons */
-button {
-    background-color: #9b51e0;
-    color: #fff;
-   
-    border: none;
-    border-radius: 5px;
-}
-
-.st-emotion-cache-1ghhuty{
-background-color: #9b51e0;
-}
-
-.st-emotion-cache-bho8sy{
-background-color: #ff6900;
-}
-/* Style the spinner */
-.stSpinner > div {
-    border-top-color: #9b51e0;
-}
-
-/* Style the download button */
-.stDownloadButton {
-    background-color: #9b51e0;
-    color: #fff;
-    border-radius: 5px;
-}
-
-.st-emotion-cache-1dp5vir{
-background-image: linear-gradient(90deg, rgb(155, 81, 224), rgb(155, 81, 224));
-}
-
-.black-text {
+if uploaded_file is not None:
+    prompts = load_prompts_from_file(uploaded_file)
     
-    color: black;
-    
-}
-</style>
-"""
+    st.write("Uploaded Prompts:")
+    # Display prompts as a list
+    st.markdown("### List of Prompts:")
+    for i, prompt in enumerate(prompts, 1):
+        st.markdown(f"{i}. {prompt}")
 
-# Inject the custom CSS
-st.markdown(custom_css, unsafe_allow_html=True)
+if st.button("Submit"):
+    if user_input and sprinklr_input and riddhi_input:
+        with st.spinner("Processing..."):
+            for i, prompt in enumerate(prompts, 1):
+                
+                st.write(i)
+            # Step 1: Generate prompt based on user input
+                st.write("prompt")
+                st.write(prompt)
+                prompt_length = len(prompt.split())  # Count the number of words in the prompt
+                st.write(f"Prompt Length: {prompt_length} words")
+                start_time = time.time()
 
-# Streamlit UI
-st.markdown("""
-      
-    <h1 style="color:#9b51e0;">
-           Myntra Sales Bot
-    </h1>
-  
-""", unsafe_allow_html=True)
-st.write("<style>div.block-container{padding-top:2rem;}</style>", unsafe_allow_html=True)
+                user_emotions = understand_user(user_input)
+                
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+                # Step 2: Rephrase Sprinklr input using the generated prompt
+                rephrased_output = rephrase_sprinklr(sprinklr_input, user_emotions,prompt)
+                st.write("Rephrased Sprinklr Output:")
+                st.write(rephrased_output)
+                end_time = time.time()
+                elapsed_time = end_time - start_time
 
-# Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+                embedding1 = get_embedding(rephrased_output)
+                embedding2 = get_embedding(riddhi_input)
 
+                # Calculate cosine similarity
+                similarity_score = calculate_similarity(embedding1, embedding2)
 
-def check_links(links, user_query):
-    web_links = []
-    youtube_links = []
-    youtube_response = ""
-    for link in links:
-       if COMPANY_DOMAIN in link:
-           web_links.append(link)
-       if "youtube.com" in link and "watch" in link:
-          
-          youtube_links.append(link)
-   
-       
-               
+                st.write("Similarity score")
+                st.write(similarity_score)
+                st.write(f"Time Taken: {elapsed_time:.2f} seconds")
+                inputs.append(user_input)
+                sprinklr_inputs.append(sprinklr_input)
+                prompts_given.append(prompt)
+                prompt_lengths.append(prompt_length)
+                rephrased_outputs.append(rephrased_output)
+                times_taken.append(elapsed_time)
+                similarity_scores.append(similarity_score)
 
-               
-               
-    
-    return web_links, youtube_links
-           
+            data = {
+                "Input": inputs,
+                "Sprinklr Input": sprinklr_inputs,
+                "Prompt": prompts_given,
+                "Prompt Length (words)": prompt_lengths,
+                "Rephrased Output": rephrased_outputs,
+                "Time Taken (seconds)": times_taken,
+                "Similarity Score": similarity_scores
+            }
+            df = pd.DataFrame(data)
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:  # Use 'xlsxwriter' engine
+                df.to_excel(writer, index=False, sheet_name='Results')
 
-# Function to save the chat history to a file
-def save_chat_history(filename=f"{COMPANY_NAME}.txt"):
-    with open(filename, "a", encoding="utf-8") as file:
-        for message in st.session_state.messages:
-            file.write(f"Role: {message['role']}\n")
-            file.write(f"Content: {message['content']}\n")
-            file.write("-" * 40 + "\n")
+            # Reset the buffer's position to the beginning
+            output.seek(0)
 
-# Function to handle log downloads
-def download_logs():
-    log_file = f"{COMPANY_NAME}.txt"
-    if Path(log_file).exists():
-        # Prompt the user to download the file
-        st.download_button(
-            label="Download Logs",
-            data=open(log_file, "rb").read(),
-            file_name=log_file,
-            mime="text/plain"
-        )
+            # Save the file to a download button
+            st.download_button(
+                label="Download Excel File",
+                data=output,
+                file_name="results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
     else:
-        st.write("No logs found.")
-
-
-
-# Function to process user query
-def process_query(user_query):
-    st.session_state.follow_up_questions = st.session_state.get("follow_up_questions", [])
-    if user_query.lower() == "give me the logs 420":
-        download_logs()
-        return  # Exit the function to avoid processing the query further
-    
-    if user_query.lower() == "email me the logs 420":
-        # Prompt user for their email address
-        st.session_state.follow_up_questions = ["Please enter your email address:"]
-        return  # Exit the function to prompt for the email
-
-    if st.session_state.follow_up_questions:
-        # If there's a follow-up question, check the user's response
-        last_question = st.session_state.follow_up_questions.pop(0)
- 
-        
-        if "Please enter your email address:" in last_question:
-            with st.chat_message("user"):
-              st.markdown(user_query)
-            st.session_state.messages.append({"role": "user", "content": user_query})
-            
-            email = user_query  # Treat the user's response as the email address
-            success, message = send_logs_email(email, COMPANY_NAME)
-
-            if success:
-                st.success(message)
-                
-            else:
-                st.error(message)
-            return # Exit the function to avoid processing the query further
-
-    with st.chat_message("user"):
-        st.markdown(user_query)
-    st.session_state.messages.append({"role": "user", "content": user_query})
-    
-    final_answer = ""  # Initialize the answer variable
-
-    with st.chat_message("assistant"):
-        with st.spinner("Processing your input..."):
-            result = centralized_crew.kickoff(inputs={'user_query': user_query})
-            try:
-                # Remove potential markdown code block syntax
-                cleaned_result = str(json.loads(result.model_dump_json())['raw']).strip().replace('```json', '').replace('```', '')
-                print(json.loads(result.model_dump_json())['raw'])
-                # Parse JSON response
-                parsed_result = json.loads(cleaned_result)
-                answer = parsed_result.get("answer", "")
-                links = parsed_result.get("links", "")
-                web, youtube = check_links(links, user_query)
-                questions = parsed_result.get("questions", [])
-                link_text = " "
-                
-                if len(youtube)>0:
-                    
-                    link_text += '\nHere some youtube references\n' + '\n'
-                    for link in youtube:
-                    
-                         link_text += '\n' + link + '\n' +','
-                    
-                
-                if len(web)>0:
-                    link_text += '\nHere some web references\n' + '\n'
-                    for link in web:
-                        
-                        link_text += '\n' + link + ','
-                    
-
-
-                
-                final_answer = answer + '\n\nFor your reference:\n' + link_text
-                
-
-                # Update follow-up questions in session state
-                st.session_state.follow_up_questions = questions
-
-            except json.JSONDecodeError as e:
-                print(e)
-                st.markdown(f"**Error parsing JSON:**\n{result}")
-                answer = "There was an error processing your request."
-
-    st.session_state.messages.append({"role": "assistant", "content": final_answer})
-    
-    
-
-    # Save chat history to file
-    save_chat_history()
-    st.rerun()
-
-# Chat input at the bottom of the page
-user_input = st.chat_input(f"Enter your question about {COMPANY_NAME}:")
-
-if user_input:
-    process_query(user_input)
-
-# Handle follow-up questions
-if "follow_up_questions" in st.session_state:
-    for question in st.session_state.follow_up_questions:
-        if st.button(question):
-            process_query(question)
+        st.error("Please provide both User and Sprinklr inputs.")
