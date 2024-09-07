@@ -99,7 +99,7 @@ if uploaded_file is not None:
     st.markdown("### List of Prompts:")
     for i, prompt in enumerate(prompts, 1):
         if len(prompt.split())>2:
-            st.markdown(f"Prompt. {prompt}")
+            st.markdown(f" {prompt}")
 
 if st.button("Submit"):
     if user_input and sprinklr_input and riddhi_input:
