@@ -285,8 +285,10 @@ if st.button("Submit"):
                 rephrased_output = rephrase_sprinklr(sprinklr_input, user_input, tactic_prompt)
                 st.write("Rephrased Sprinklr Output:")
                 st.write(rephrased_output)
-        elif option =='Rephrase using static prompts':
+        elif option =='Rephrase using dynamic response':
+           
             with st.spinner("Processing..."):
+                
                 tactics_list = understand_tactics_dynamically(user_input, sprinklr_input)
                 st.write(tactics_list)
                 rephrased_output = rephrase_sprinklr_dynamically(sprinklr_input, user_input, tactics_list)
